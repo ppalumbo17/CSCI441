@@ -31,7 +31,7 @@
 static size_t windowWidth  = 640;
 static size_t windowHeight = 480;
 static float aspectRatio;
-static float cameraStepValue = 2.5;
+static float cameraStepValue = .5;
 GLint leftMouseButton; 		   	    // status of the mouse buttons
 int mouseX = 0, mouseY = 0;                 // last known X and Y of the mouse
 
@@ -226,7 +226,9 @@ void resizeWindow(int w, int h) {
 void mouseCallback(int button, int state, int thisX, int thisY) {
     // update the left mouse button states, if applicable
     if(button == GLUT_LEFT_BUTTON)
-        leftMouseButton = state;    
+        leftMouseButton = state;   
+        mouseX = thisX;
+        mouseY = thisY; 
 }
 
 // mouseMotion() ///////////////////////////////////////////////////////////////
@@ -239,20 +241,26 @@ void mouseCallback(int button, int state, int thisX, int thisY) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void mouseMotion(int x, int y) {
-	mouseX = x;
-	mouseY = y;
+	//mouseX = x;
+	//mouseY = y;
     if(leftMouseButton == GLUT_DOWN) {
-		cameraTheta += (mouseX - x)*.005;
-		if (cameraPhi > 0 && cameraPhi < 3.1416) {
-			cameraPhi += (mouseY - y)*.005;
+    	
+    	float scale = 0.005;
+    	float dx = (x-mouseX)*scale;
+    	float dy = (y-mouseY)*scale;
+		cameraTheta -= dx;
+		cameraPhi -= dy;
+		if (cameraPhi < 0 || cameraPhi > M_PI) {
+			cameraPhi = .001;
 		}
+		mouseX = x;
+		mouseY = y;
         recomputeOrientation();     // update camera (x,y,z) based on (radius,theta,phi)
 		
 
 	glutPostRedisplay();	    // redraw our scene from our new camera POV
     }
-	mouseX = x;
-	mouseY = y;
+	
 }
 
 
@@ -330,14 +338,14 @@ void normalKeysDown(unsigned char key, int x, int y) {
         exit(0);
 
 	if (key == 'w' || key == 'W') {
-		cameraX -= dirX + cameraStepValue;
-		cameraY -= dirY + cameraStepValue;
-		cameraZ -= dirZ + cameraStepValue;
+		cameraX += dirX * cameraStepValue;
+		cameraY += dirY * cameraStepValue;
+		cameraZ += dirZ * cameraStepValue;
 	}
 	if (key == 's' || key == 'S') {
-		cameraX += dirX + cameraStepValue;
-		cameraY += dirY + cameraStepValue;
-		cameraZ += dirZ + cameraStepValue;
+		cameraX -= dirX * cameraStepValue;
+		cameraY -= dirY * cameraStepValue;
+		cameraZ -= dirZ * cameraStepValue;
 	}
     glutPostRedisplay();		// redraw our scene from our new camera POV
 }

@@ -165,7 +165,13 @@ void drawCylinder() {
 }
 //draw a fan on my cylinder
 void drawFan() {
+	glPushMatrix();{
+		glColor3f(.3,.3,.7);
+		glBegin(GL_TRIANGLES);
+		glVertex3f()
 
+	};
+	glPopMatrix();
 }
 //draw my character that will move around the world
 //void drawCharacter()
