@@ -232,7 +232,7 @@ void myMouse(int button, int state, int mouseX, int mouseY) {
 //control passive mouse motions
 void myMotion(int mouseX, int mouseY) {
 	myMouseX = mouseX;
-	myMouseY = mouseY;
+	myMouseY = windowHeight - mouseY;
 }
 
 //

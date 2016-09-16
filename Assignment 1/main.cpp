@@ -79,7 +79,7 @@ void drawRectangle() {
 }
 
 
-//coid drawCircle
+//void drawCircle
 //draw a perfect circle, i hope
 void drawCircle(float radius)
 {
