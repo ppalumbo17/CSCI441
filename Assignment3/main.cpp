@@ -163,6 +163,10 @@ void drawCylinder() {
 		glEnd();
 	}; glPopMatrix();
 }
+//draw a fan on my cylinder
+void drawFan() {
+
+}
 //draw my character that will move around the world
 //void drawCharacter()
 void drawCharacter() {
