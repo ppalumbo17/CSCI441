@@ -1,20 +1,17 @@
 CSCI441, Computer Graphics, Fall 2016
-Dr. Jeffrey paone
+Peter Palumbo
+Assignment 3
 
-Code Example: Lab02
+This code sucks. 
+This project was frustrating.
+I'm trying to submit this on time wish me luck.
+Sorry this readme sucks.
 
-	This program is a simple example of a flight simulator using a free camera
-    model.  The user can move the camera through a city scene as if flying an airplane.
+The boundry works sometimes.
+I promise the wheels actually spin.
+The camera was confusing and I struggled with it a lot and it doesn't really work. But it follows the car around a bit.
 
-Usage: 
-    Pressing 'w' moves the camera forward and pressing 's' moves the camera back.
+The wasd keys should work.
 
-    Left click and dragging the mouse moves the camera around.
+Submitting now, I'm sorry.
 
-    The user can also press the 'q' key to quit the program.
-
-Compilation Instructions:
-    Simply navigate to the directory and type 'make.' Only main.cpp needs
-    to be linked with the OpenGL / freeglut libraries.
-
-Notes:

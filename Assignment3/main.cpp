@@ -16,7 +16,7 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glu.h>
 #else					// else compiling on Linux OS
-	#include <GL/glut.h>
+	#include <GL/freeglut.h>
 	#include <GL/gl.h>
 	#include <GL/glu.h>
 #endif
@@ -31,7 +31,7 @@
 static size_t windowWidth  = 640;
 static size_t windowHeight = 480;
 static float aspectRatio;
-static float cameraStepValue = 2.5;
+static float cameraStepValue = 0.5;
 GLint leftMouseButton; 		   	    // status of the mouse buttons
 int mouseX = 0, mouseY = 0;                 // last known X and Y of the mouse
 
@@ -39,6 +39,13 @@ float cameraX, cameraY, cameraZ;            // camera position in cartesian coor
 float cameraTheta, cameraPhi;               // camera DIRECTION in spherical coordinates
 float dirX, dirY, dirZ;                     // camera DIRECTION in cartesian coordinates
 
+float characterX, characterY, characterZ; //character position
+float transportRotation = 0;
+float wheelRotation = 0;
+float fanRotate =0;
+float cameraRadius = 5;
+
+bool keysPressed[256];
 GLuint environmentDL;                       // display list for the 'city'
 
 
@@ -113,24 +120,28 @@ void drawCity() {
 				glVertex3f(x, 0, z + 1);
 				glVertex3f(x, height, z + 1);
 				glVertex3f(x, height, z);
+				glVertex3f(x, 0, z);
 				
 				//side 2
 				glVertex3f(x, 0, z + 1);
 				glVertex3f(x + 1, 0, z + 1);
+				glVertex3f(x+1, height, z + 1);
 				glVertex3f(x, height, z + 1);
-				glVertex3f(x + 1, height, z + 1);
+				glVertex3f(x, 0, z + 1);
 
 				//side 3
 				glVertex3f(x + 1, 0, z + 1);
 				glVertex3f(x + 1, 0, z);
-				glVertex3f(x + 1, height, z + 1);
 				glVertex3f(x + 1, height, z);
+				glVertex3f(x + 1, height, z+1);
+				glVertex3f(x + 1, 0, z + 1);
 
 				//side 4
 				glVertex3f(x + 1, 0, z);
 				glVertex3f(x, 0, z);
 				glVertex3f(x, height, z);
 				glVertex3f(x + 1, height, z);
+				glVertex3f(x + 1, 0, z);
 
 
 				glEnd();
@@ -144,7 +155,7 @@ void drawCity() {
 //void drawCylinder()
 void drawCylinder() {
 	float numSteps = 26.0f;
-	float radius = 4.0f;
+	float radius = 1.0f;
 	float length = 10.0f;
 	float hl = length * 0.5f;
 	float count = 0.0f;
@@ -166,19 +177,203 @@ void drawCylinder() {
 //draw a fan on my cylinder
 void drawFan() {
 	glPushMatrix();{
-		glColor3f(.3,.3,.7);
-		glBegin(GL_TRIANGLES);
-		glVertex3f()
+		glColor3f(.3,.9,.1);
+		glScalef(.075,.075,.075);
+		glRotatef(fanRotate, 0,0,1);
+		glBegin(GL_TRIANGLE_FAN);
+		//first fan
+		glVertex3f(0,0,0);
+		glVertex3f(53,-53,0);
+		glVertex3f(20,-72,0);
+		//second fan
+		glVertex3f(0,0,0);
+		glVertex3f(-53,-53,0);
+		glVertex3f(-72,-20,0);
+		//third fan
+		glVertex3f(0,0,0);
+		glVertex3f(-53,53,0);
+		glVertex3f(-20,72,0);
+		//fourth fan
+		glVertex3f(0,0,0);
+		glVertex3f(53,53,0);
+		glVertex3f(72,20,0);
+
+		glEnd();
 
 	};
 	glPopMatrix();
 }
+
+//draw a copter for the back of my car
+//void drawCopter()
+void drawCopter(){
+	glPushMatrix();{
+		//glRotatef(90,1,0,0);
+		glPushMatrix();{
+			glRotatef(90,1,0,0);
+			drawCylinder();
+		};glPopMatrix();
+		glPushMatrix();{
+			glTranslatef(0,6,0);
+			glRotatef(90,1,0,0);
+			drawFan();
+		};glPopMatrix();
+	};glPopMatrix();
+}
+//void draw the wheels of my car
+//void drawWheels()
+void drawWheels(){
+	glPushMatrix(); {
+		//drawCylinder();
+		
+		glColor3f(255,0.0,0.0);
+		glPushMatrix();{
+			glTranslatef(0.5, 1, 0); //rotate the wheels around the axel
+			glRotatef(wheelRotation, 0, 0, 1);
+			glutSolidTorus(1, 2, 50, 20); 
+			//DON'T THINK THE WHEEL IS MOVING!?!? ME NEITHER
+			//SO I PUT THIS RANDOM ASS TRIANGLE IN HERE TO PROVE IT UNCOMMENT IF YOU WANT PROOF
+			// glBegin(GL_TRIANGLES); //begin random triangle //UNCOMMENT
+			// glPushMatrix();{ //UNCOMMENT
+			// glColor3f(.7,.3,.3); //UNCOMMENT
+			// 	glVertex3f(5, 2*2, 0); //UNCOMMENT
+			// 	glVertex3f(10, 2*2, 5); //UNCOMMENT
+			// 	glVertex3f(0, 2*2, 5); //UNCOMMENT
+			// glEnd(); //end random triangle //UNCOMMENT
+			// };glPopMatrix(); //UNCOMMENT
+			glTranslatef(-0.5, -1, 0);
+		};glPopMatrix();
+		glPushMatrix();{
+			glTranslatef(10,0,0);
+			glTranslatef(0.5, 1, 0);
+			glRotatef(wheelRotation, 0, 0, 1);
+			glutSolidTorus(1, 2, 50, 20);
+			glTranslatef(-0.5, -1, 0);
+		};glPopMatrix();
+
+		glPushMatrix();{
+			glTranslatef(10,0,10);
+			glTranslatef(0.5, 1, 0);
+			glRotatef(wheelRotation, 0, 0, 1);
+			glutSolidTorus(1, 2, 50, 20);
+			glTranslatef(-0.5, -1, 0);
+		};glPopMatrix();
+
+		glPushMatrix();{
+			glTranslatef(0,0,10);
+			glTranslatef(0.5, 1, 0);
+			glRotatef(wheelRotation, 0, 0, 1);
+			glutSolidTorus(1, 2, 50, 20);
+			glTranslatef(-0.5, -1, 0);
+		};glPopMatrix();
+		//glPushMatrix();
+		
+		//drawFan();
+		//glPopMatrix();
+	};glPopMatrix();
+}
+
+//draw the body of the car
+//void draw body
+void drawBody(){
+
+	glPushMatrix();{
+		glBegin(GL_QUADS);
+				//glColor3f(getRand(), getRand(), getRand());
+				GLfloat height = 2;
+				GLfloat x = 0;
+				GLfloat z = 0;
+				GLfloat length =12;
+				GLfloat width = 8;
+				//bottom
+				glVertex3f(x, 0, z);
+				glVertex3f(x, 0, z + width);
+				glVertex3f(x + length, 0, z + width);
+				glVertex3f(x + length, 0, z);
+
+				//top
+				glVertex3f(x, height, z);
+				glVertex3f(x, height, z + width);
+				glVertex3f(x + length, height, z + width);
+				glVertex3f(x + length, height, z);
+
+				//side 1
+				glVertex3f(x, 0, z);
+				glVertex3f(x, 0, z + width);
+				glVertex3f(x, height, z + width);
+				glVertex3f(x, height, z);
+				glVertex3f(x, 0, z);
+				
+				//side 2
+				glVertex3f(x, 0, z + width);
+				glVertex3f(x + length, 0, z + width);
+				glVertex3f(x+length, height, z + width);
+				glVertex3f(x, height, z + width);
+				glVertex3f(x, 0, z + width);
+
+				//side 3
+				glVertex3f(x + length, 0, z + width);
+				glVertex3f(x + length, 0, z);
+				glVertex3f(x + length, height, z);
+				glVertex3f(x + length, height, z+width);
+				glVertex3f(x + length, 0, z + width);
+
+				//side 4
+				glVertex3f(x + length, 0, z);
+				glVertex3f(x, 0, z);
+				glVertex3f(x, height, z);
+				glVertex3f(x + length, height, z);
+				glVertex3f(x + length, 0, z);
+
+
+			glEnd();
+			// glBegin(GL_TRIANGLES);
+			// glPushMatrix();{
+			// glColor3f(.7,.3,.3);
+			// 	glVertex3f(x/2, height*2, 0);
+			// 	glVertex3f(x, height*2, z/2);
+			// 	glVertex3f(0, height*2, z/2);
+			// glEnd();
+			// };glPopMatrix();
+	};glPopMatrix();
+
+
+}
 //draw my character that will move around the world
 //void drawCharacter()
 void drawCharacter() {
-	glPushMatrix(); {
-		drawCylinder();
-	};
+	//glRotatef(transportRotation,0,1,0);
+	glPushMatrix();
+	
+	glTranslatef(characterX,0,characterZ);
+	//glTranslatef(0,0,-4);
+	glRotatef(transportRotation, 0, 1, 0);
+	glScalef(.15f,.15f,.15f);
+	
+	
+	glColor3f(.7,.3,.7);
+	glPushMatrix();{
+
+		drawWheels();
+		glPushMatrix();{
+			glTranslatef(0,0,5);
+			drawCylinder();
+			glTranslatef(10,0,0);
+			drawCylinder();
+		};glPopMatrix();
+	};glPopMatrix();
+
+	glPushMatrix();{
+		glColor3f(.3,.3,.7);
+		glTranslatef(0,0,1);
+		drawBody();
+	};glPopMatrix();
+	glPushMatrix();{
+		glColor3f(.7,.3,.7);
+		glTranslatef(10,6,4.5);
+		drawCopter();
+	};glPopMatrix();
+	//glTranslatef(0,0,4);
 	glPopMatrix();
 }
 
@@ -221,15 +416,15 @@ void recomputeOrientation() {
     // TODO #5: Convert spherical coordinates into a cartesian vector
     // see Wednesday's slides for equations.  Extra Hint: Slide #34
 	
-	dirX = sin(cameraTheta)*cos(cameraPhi);// +cameraX;
-	dirY = -cos(cameraPhi);// +cameraY;
-	dirZ = -cos(cameraTheta)*sin(cameraPhi);// +cameraZ;
+	cameraX = sin(cameraTheta)*sin(cameraPhi)*cameraRadius;// + characterX;
+	cameraY = -cos(cameraPhi)*cameraRadius;// +characterY;
+	cameraZ = -cos(cameraTheta)*sin(cameraPhi)*cameraRadius;// + characterZ;
 	
 	float length = sqrt(pow(dirX, 2) + pow(dirY, 2) + pow(dirZ, 2));
 	
-	dirX /= length;
-	dirY /= length;
-	dirZ /= length;
+	// dirX /= length;
+	// dirY /= length;
+	// dirZ /= length;
 
     // and NORMALIZE this directional vector!!!
     
@@ -267,7 +462,9 @@ void resizeWindow(int w, int h) {
 void mouseCallback(int button, int state, int thisX, int thisY) {
     // update the left mouse button states, if applicable
     if(button == GLUT_LEFT_BUTTON)
-        leftMouseButton = state;    
+        leftMouseButton = state; 
+        mouseX = thisX;
+        mouseY = thisY;    
 }
 
 // mouseMotion() ///////////////////////////////////////////////////////////////
@@ -280,13 +477,18 @@ void mouseCallback(int button, int state, int thisX, int thisY) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void mouseMotion(int x, int y) {
-	mouseX = x;
-	mouseY = y;
+	
     if(leftMouseButton == GLUT_DOWN) {
-		cameraTheta += (mouseX - x)*.005;
-		if (cameraPhi > 0 && cameraPhi < 3.1416) {
-			cameraPhi += (mouseY - y)*.005;
-		}
+		float scale = 0.005;
+    	float dx = (x-mouseX)*scale;
+    	float dy = (y-mouseY)*scale;
+		cameraTheta -= dx;
+		cameraPhi -= dy;
+		//if (cameraPhi < 0 || cameraPhi > M_PI) {
+			//cameraPhi = .001;
+		//}
+		mouseX = x;
+		mouseY = y;
         recomputeOrientation();     // update camera (x,y,z) based on (radius,theta,phi)
 		
 
@@ -347,13 +549,17 @@ void renderScene(void)  {
     //update the modelview matrix based on the camera's position
     glMatrixMode(GL_MODELVIEW);              //make sure we aren't changing the projection matrix!
     glLoadIdentity();
+
     // TODO #6: Change how our lookAt matrix gets constructed
-    gluLookAt( cameraX, cameraY, cameraZ,      // camera is located at (10,10,10)
-                dirX+cameraX,  dirY+cameraY,  dirZ+cameraZ,   	// camera is looking at (0,0,0)
+    gluLookAt( cameraX+characterX, cameraY+characterY, cameraZ+characterZ,      // camera is located at (10,10,10)
+    			//cameraX, cameraY, cameraZ,
+                characterX,  characterY,  characterZ,   	// camera is looking at (0,0,0)
+    			//characterX, characterY, characterZ,
                 0,  1,  0);     // up vector is (0,1,0) (positive Y)
 
     /** TODO #2: REMOVE TEAPOT & CREATE A CITY SCENE ON A GRID...but call it's display list! **/
-	//glCallList(environmentDL);
+	glCallList(environmentDL);
+	
 	drawCharacter();
     //push the back buffer to the screen
     glutSwapBuffers();
@@ -370,19 +576,106 @@ void normalKeysDown(unsigned char key, int x, int y) {
     if(key == 'q' || key == 'Q' || key == 27)
         exit(0);
 
-	if (key == 'w' || key == 'W') {
-		cameraX -= dirX + cameraStepValue;
-		cameraY -= dirY + cameraStepValue;
-		cameraZ -= dirZ + cameraStepValue;
-	}
 	if (key == 's' || key == 'S') {
-		cameraX += dirX + cameraStepValue;
-		cameraY += dirY + cameraStepValue;
-		cameraZ += dirZ + cameraStepValue;
+		keysPressed['s'] = true;
 	}
-    glutPostRedisplay();		// redraw our scene from our new camera POV
+	if (key == 'w' || key == 'W') {
+		keysPressed['w'] = true;
+	}
+	if (key =='d'||key=='D'){
+		keysPressed['d']=true;
+		//recomputeOrientation();
+
+	}
+	if (key =='a'||key=='A'){
+		keysPressed['a']=true;
+		//recomputeOrientation();
+	}
+
+	// if (key == 'wd' && key == 'd') {
+	// 	transportRotation += 2;
+	// 	if(characterX < 49 && characterX > -49 && characterZ < 49 && characterZ > -49){
+	// 		characterZ += cameraStepValue*sin(transportRotation*M_PI/180);
+	// 		characterX -= cameraStepValue*cos(transportRotation*M_PI/180);
+	// 		cameraZ += cameraStepValue*sin(transportRotation*M_PI/180);
+	// 		cameraX -= cameraStepValue*cos(transportRotation*M_PI/180);
+	// 		transportRotation += 2;
+	// 		wheelRotation += 1;
+	// 	}
+	// 	else{
+	// 		characterZ -= cameraStepValue*sin(transportRotation);
+	// 		characterX += cameraStepValue*cos(transportRotation);
+	// 		cameraZ -= cameraStepValue*sin(transportRotation);
+	// 		cameraX += cameraStepValue*cos(transportRotation);
+	// 	}
+	// }
+    //glutPostRedisplay();		// redraw our scene from our new camera POV
 }
 
+//called when a key is realeased
+//void normalKeyUp(unsigned char key, int x, int y)
+void normalKeysUp(unsigned char key, int x, int y){
+	if (key == 's' || key == 'S') {
+		keysPressed['s'] = false;
+	}
+	if (key == 'w' || key == 'W') {
+		keysPressed['w'] = false;
+	}
+	if (key =='d'||key=='D'){
+		keysPressed['d']=false;
+		//recomputeOrientation();
+
+	}
+	if (key =='a'||key=='A'){
+		keysPressed['a']=false;
+		//recomputeOrientation();
+	}
+}
+void myTimer(int value) {
+
+	if(keysPressed['s']){
+		if(characterX < 49 && characterX > -49 && characterZ < 49 && characterZ > -49){
+			characterZ -= cameraStepValue*sin(transportRotation*M_PI/180);
+			characterX += cameraStepValue*cos(transportRotation*M_PI/180);
+			// cameraZ -= cameraStepValue*sin(transportRotation*M_PI/180);
+			// cameraX += cameraStepValue*cos(transportRotation*M_PI/180);
+			wheelRotation -= 7;
+		}
+		// else{
+		// 	characterZ += cameraStepValue*sin(transportRotation);
+		// 	characterX -= cameraStepValue*cos(transportRotation);
+		// 	cameraZ += cameraStepValue*sin(transportRotation);
+		// 	cameraX -= cameraStepValue*cos(transportRotation);
+		// }
+	}
+	if(keysPressed['w']){
+		if(characterX < 49 && characterX > -49 && characterZ < 49 && characterZ > -49){
+			characterZ += cameraStepValue*sin(transportRotation*M_PI/180);
+			characterX -= cameraStepValue*cos(transportRotation*M_PI/180);
+			// cameraZ += cameraStepValue*sin(transportRotation*M_PI/180);
+			// cameraX -= cameraStepValue*cos(transportRotation*M_PI/180);
+			wheelRotation += 7;
+		}
+		// else{
+		// 	characterZ -= cameraStepValue*sin(transportRotation);
+		// 	characterX += cameraStepValue*cos(transportRotation);
+		// 	cameraZ -= cameraStepValue*sin(transportRotation);
+		// 	cameraX += cameraStepValue*cos(transportRotation);
+		// }
+	}
+	if(keysPressed['a']){
+		transportRotation += 2;
+		cameraTheta += 2*M_PI/180;
+	}
+	if(keysPressed['d']){
+		transportRotation -= 2;
+		cameraTheta -= 2*M_PI/180;
+	}
+
+	fanRotate += 5;
+	glutPostRedisplay();
+	glutTimerFunc(1000/60, myTimer, 0);
+}
 
 
 
@@ -400,21 +693,25 @@ int main(int argc, char **argv) {
     glutCreateWindow("flight simulator 0.31");
 
     // give the camera a scenic starting point.
-    cameraX = 60;
-    cameraY = 40;
+    cameraX = 40;
+    cameraY = 15;
     cameraZ = 30;
     cameraTheta = -M_PI / 3.0f;
     cameraPhi = M_PI / 2.8f;
+    characterX = 30;
+    characterY = 5;
+    characterZ = 30;
     recomputeOrientation();
 
     // register callback functions...
     glutSetKeyRepeat(GLUT_KEY_REPEAT_ON);
     glutKeyboardFunc(normalKeysDown);
+    glutKeyboardUpFunc(normalKeysUp);
     glutDisplayFunc(renderScene);
     glutReshapeFunc(resizeWindow);
     glutMouseFunc(mouseCallback);
     glutMotionFunc(mouseMotion);
-
+    glutTimerFunc(1000/60, myTimer, 0);
     // do some basic OpenGL setup
     initScene();
 
