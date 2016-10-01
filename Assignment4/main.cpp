@@ -1,7 +1,7 @@
 /*
  *  CSCI 441, Computer Graphics, Fall 2015
  *
- *  Project: Assignment 3
+ *  Project: Assignment 4
  *  File: main.cpp
  *
  *	Author: Peter Palumbo
@@ -21,18 +21,32 @@
 	#include <GL/glu.h>
 #endif
 
+#include <GL/glui.h>			// include our GLUI header
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
 
+
+// C++ Libraries we'll use
+#include <fstream>			// we'll use ifstream	
+#include <string>			// for, well strings!
+#include <vector>			// and vectors (the storage container, not directional)
+#include <sstream>
+#include <iostream>
+
+// Headers We've Written
+#include "Point.h"
+
+using namespace std;
 // GLOBAL VARIABLES ////////////////////////////////////////////////////////////
 
 static size_t windowWidth  = 640;
 static size_t windowHeight = 480;
 static float aspectRatio;
 static float cameraStepValue = 0.5;
-GLint leftMouseButton; 		   	    // status of the mouse buttons
+GLint leftMouseButton, righMouseButton; 		   	    // status of the mouse buttons
 int mouseX = 0, mouseY = 0;                 // last known X and Y of the mouse
 
 float cameraX, cameraY, cameraZ;            // camera position in cartesian coordinates
@@ -44,6 +58,23 @@ float transportRotation = 0;
 float wheelRotation = 0;
 float fanRotate =0;
 float cameraRadius = 5;
+
+
+GLint menuId;				    			// handle for our menu
+
+float sphereRadius = 0.5f; //the radius of the control points
+float lineThickness = 3.0f;  //variable for line thickness between points
+
+vector<Point> controlPoints;
+float trackPointVal = 0.0f;
+float timerValue = 0.0f; //timer value to control pixie
+
+bool DRAW_CAGE = true;  //Menu option for drawing the bezier points
+bool DRAW_CURVE = true;  //Menu option for drawing the bezier curve
+bool CTRL_PRESSED = false;
+bool WHICH_POINTS = true;
+
+Point onBez;
 
 bool keysPressed[256];
 GLuint environmentDL;                       // display list for the 'city'
@@ -376,7 +407,76 @@ void drawCharacter() {
 	//glTranslatef(0,0,4);
 	glPopMatrix();
 }
+// drawSolidSphere(float x,float y,float z)//
+// draw a solid sphere at a location x, y, z
+void drawSolidSphere(){
+    glPushMatrix();{
+        glColor4f(.2, .2, .8, .4);
+        glutSolidSphere(sphereRadius, 10, 10);
+    };glPopMatrix();
+}
 
+//drawSipit(float x, float y, float z)
+//draw the spirit for the bezier curve at x,y,z
+void drawSpirit(float inX, float inY, float inZ){
+	glPushMatrix();{
+		
+        glTranslatef(inX, inY, inZ);
+        // glRotatef(-fanRotate, 0,1,1);
+        glPushMatrix();{
+        	glScalef(2,2,2);
+        	drawSolidSphere();
+        };glPopMatrix();
+        //One Sphere
+        glPushMatrix();{
+        	glRotatef(-fanRotate, 0,1,1);
+        	glTranslatef(1,1,0);
+        	drawSolidSphere();
+        };glPopMatrix();
+        //Two Sphere
+        glPushMatrix();{
+        	glRotatef(-fanRotate, 1,1,0);
+        	glTranslatef(0,1,1);
+        	drawSolidSphere();
+        };glPopMatrix();
+        //Three Sphere
+        glPushMatrix();{
+        	glRotatef(-fanRotate, 1,0,1);
+        	glTranslatef(1,-1,0);
+        	drawSolidSphere();
+        };glPopMatrix();
+        //Four Sphere
+        glPushMatrix();{
+        	glRotatef(-fanRotate, 1,-1,0);
+        	glTranslatef(0,-1,1);
+        	drawSolidSphere();
+        };glPopMatrix();
+        // //Five Sphere
+        // glPushMatrix();{
+        // 	// glRotatef(-fanRotate, 0,1,-1);
+        // 	glTranslatef(1,1,1);
+        // 	drawSolidSphere();
+        // };glPopMatrix();
+        // //Six Sphere
+        // glPushMatrix();{
+        // 	// glRotatef(-fanRotate, -1,1,0);
+        // 	glTranslatef(-1,-1,-1);
+        // 	drawSolidSphere();
+        // };glPopMatrix();
+        // //Seven Sphere
+        // glPushMatrix();{
+        // 	// glRotatef(-fanRotate, 0,-1,1);
+        // 	glTranslatef(1,-1,-1);
+        // 	drawSolidSphere();
+        // };glPopMatrix();
+        // //Eight Sphere
+        // glPushMatrix();{
+        // 	//glRotatef(-fanRotate, 1,-1,0);
+        // 	glTranslatef(-1,-1,1);
+        // 	drawSolidSphere();
+        // };glPopMatrix();
+	};glPopMatrix();
+}
 // generateEnvironmentDL() /////////////////////////////////////////////////////
 //
 //  This function creates a display list with the code to draw a simple 
@@ -430,6 +530,152 @@ void recomputeOrientation() {
     
 }
 
+//STUFF FROM LAB03
+
+// evaluateBezierCurve() ////////////////////////////////////////////////////////
+//
+// Computes a location along a Bezier Curve. 
+//
+////////////////////////////////////////////////////////////////////////////////
+Point evaluateBezierCurve( Point p0, Point p1, Point p2, Point p3, float t ) {
+    // TODO #08: Compute a point along a Bezier curve
+	float bezX = pow(1-t, 3)*p0.getX() + 3*pow(1-t, 2)*t*p1.getX() + 3*(1-t)*pow(t, 2)*p2.getX() + pow(t, 3)*p3.getX();
+    float bezY = pow(1-t, 3)*p0.getY() + 3*pow(1-t, 2)*t*p1.getY() + 3*(1-t)*pow(t, 2)*p2.getY() + pow(t, 3)*p3.getY();
+    float bezZ = pow(1-t, 3)*p0.getZ() + 3*pow(1-t, 2)*t*p1.getZ() + 3*(1-t)*pow(t, 2)*p2.getZ() + pow(t, 3)*p3.getZ();
+
+    return Point(bezX, bezY, bezZ);
+}
+
+// renderBezierCurve() //////////////////////////////////////////////////////////
+//
+// Responsible for drawing a Bezier Curve as defined by four control points.
+//  Breaks the curve into n segments as specified by the resolution. 
+//
+////////////////////////////////////////////////////////////////////////////////
+void renderBezierCurve( Point p0, Point p1, Point p2, Point p3, int resolution ) {
+    // TODO #07: Draw a Bezier curve
+    glPushMatrix();
+    glLineWidth(lineThickness);
+    glColor3f(0,0,1);
+    glBegin(GL_LINE_STRIP);
+    for(float i = 0; i < resolution; i+=.4){
+        float time = float(i) / float(resolution);
+        Point eval = evaluateBezierCurve(p0, p1, p2, p3, time);
+        glVertex3f(eval.getX(),eval.getY(),eval.getZ());
+        //drawSolidSphere(eval.getX(),eval.getY(),eval.getZ());
+    }
+    glEnd();
+    glPopMatrix();
+}
+// drawSphere(float x,float y,float z)//
+// draw a sphere at a location x, y, z
+void drawSphere(float inX, float inY, float inZ){
+    glPushMatrix();{
+        glColor3f(.2, .8, .2);
+        glTranslatef(inX, inY, inZ);
+        glutWireSphere(sphereRadius, 10, 10);
+    };glPopMatrix();
+}
+
+// myMenu() /////////////////////////////////////////////////////////////////////
+//
+//  Handles our Menu events
+//
+////////////////////////////////////////////////////////////////////////////////
+void myMenu( int value ) {
+	// TODO #02: handle our menu options
+    switch(value){
+        case 0:
+            exit(0);
+            break;
+        case 1:
+        	DRAW_CAGE = !(DRAW_CAGE);
+        	break;
+        case 2:
+        	DRAW_CURVE = !(DRAW_CURVE);
+        	glutPostRedisplay();
+        	break;
+    }
+
+}
+
+// createMenus() ///////////////////////////////////////////////////////////////
+//
+//  Handles creating a menu, adding menu entries, and attaching the menu to
+//  a mouse button
+//
+////////////////////////////////////////////////////////////////////////////////
+void createMenus() {
+	// TODO #01: Create a Simple Menu
+    glutCreateMenu( myMenu );
+    glutAddMenuEntry("Quit",0);
+    glutAddMenuEntry("Display/Hide Control Cage", 1);
+    glutAddMenuEntry("Display/Hide Bezier Curve", 2);
+    
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+
+}
+// loadControlPoints() /////////////////////////////////////////////////////////
+//
+//  Load our control points from file and store them in a global variable.
+//
+////////////////////////////////////////////////////////////////////////////////
+bool loadControlPoints( char* filename ) {
+	// TODO #04: read in control points from file.  Make sure the file can be
+	// opened and handle it appropriately.
+    ifstream file(filename);
+    if(!file.good()){
+        return false;
+    }
+    string numPoints;
+    getline(file, numPoints);
+    if(file.is_open()){
+        while(file.good()){
+            string new_Line;
+            getline(file, new_Line);
+            stringstream lineStream(new_Line);
+            string point_Member;
+            vector<double> input_Points;
+            while(getline(lineStream, point_Member, ',')){
+                input_Points.push_back(atof(point_Member.c_str()));
+            }
+            //cout << "Error is here" << endl;
+            if(file.good()){
+                Point new_Point(input_Points.at(0),input_Points.at(1),input_Points.at(2));
+                controlPoints.push_back(new_Point);
+            }
+        }
+    }
+    file.close();
+	return true;
+}
+
+//drawControlPoints()
+//draw the bezier curve and it's control points
+void drawControlPoints(){
+	// TODO #05: Draw our control points
+    for(int i = 0; i < controlPoints.size(); i++){
+    	if(DRAW_CAGE){
+	        glPushMatrix();{
+	            drawSphere(controlPoints.at(i).getX(),controlPoints.at(i).getY(),controlPoints.at(i).getZ());
+	        };glPopMatrix();
+	        if(i < controlPoints.size()-1){
+	            glPushMatrix();{
+	                glLineWidth(lineThickness);
+	                glColor3f(1,1,0);
+	                glBegin(GL_LINE_STRIP);
+	                glVertex3f(controlPoints.at(i).getX(),controlPoints.at(i).getY(),controlPoints.at(i).getZ());
+	                glVertex3f(controlPoints.at(i+1).getX(),controlPoints.at(i+1).getY(),controlPoints.at(i+1).getZ());
+	                glEnd();
+	            };glPopMatrix();
+	        }
+    	}
+        if(i < controlPoints.size()-3 && (i%3==0) && DRAW_CURVE){
+            renderBezierCurve(controlPoints.at(i), controlPoints.at(i+1), controlPoints.at(i+2), controlPoints.at(i+3), 200);
+        }
+    }
+}
+
 // resizeWindow() //////////////////////////////////////////////////////////////
 //
 //  GLUT callback for window resizing. Resets GL_PROJECTION matrix and viewport.
@@ -464,7 +710,13 @@ void mouseCallback(int button, int state, int thisX, int thisY) {
     if(button == GLUT_LEFT_BUTTON)
         leftMouseButton = state; 
         mouseX = thisX;
-        mouseY = thisY;    
+        mouseY = thisY;
+    if(glutGetModifiers()==GLUT_ACTIVE_CTRL){
+    	CTRL_PRESSED = true;
+    }    
+    else{
+    	CTRL_PRESSED = false;
+    }
 }
 
 // mouseMotion() ///////////////////////////////////////////////////////////////
@@ -477,8 +729,16 @@ void mouseCallback(int button, int state, int thisX, int thisY) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void mouseMotion(int x, int y) {
-	
-    if(leftMouseButton == GLUT_DOWN) {
+	if((leftMouseButton == GLUT_DOWN )&& CTRL_PRESSED){//(glutGetModifiers()==GLUT_ACTIVE_CTRL)){
+		float scale = .05;
+		float dy = (y-mouseY)*scale;
+		cameraRadius += dy;
+		recomputeOrientation();     // update camera (x,y,z) based on (radius,theta,phi)
+		
+
+		glutPostRedisplay();
+	}
+    else if(leftMouseButton == GLUT_DOWN && !CTRL_PRESSED){//(glutGetModifiers()==GLUT_ACTIVE_CTRL)) {
 		float scale = 0.005;
     	float dx = (x-mouseX)*scale;
     	float dy = (y-mouseY)*scale;
@@ -563,6 +823,16 @@ void renderScene(void)  {
     /** TODO #2: REMOVE TEAPOT & CREATE A CITY SCENE ON A GRID...but call it's display list! **/
 	glCallList(environmentDL);
 	
+	glPushMatrix();{
+		glTranslatef(characterX+sin(transportRotation*M_PI/180),characterY-2,characterZ+cos(transportRotation*M_PI/180));
+		glRotatef(transportRotation, 0, 1, 0);
+		glScalef(.25,.25,.25);
+		drawControlPoints();
+		glPushMatrix();{
+			drawSpirit(onBez.getX(),onBez.getY(),onBez.getZ());
+
+		};glPopMatrix();
+	};glPopMatrix();
 	drawCharacter();
     //push the back buffer to the screen
     glutSwapBuffers();
@@ -594,6 +864,9 @@ void normalKeysDown(unsigned char key, int x, int y) {
 		keysPressed['a']=true;
 		//recomputeOrientation();
 	}
+	// if(glutGetModifiers()==GLUT_ACTIVE_CTRL){
+	// 	CTRL_PRESSED = !(CTRL_PRESSED);
+	// }
 
 	// if (key == 'wd' && key == 'd') {
 	// 	transportRotation += 2;
@@ -633,9 +906,35 @@ void normalKeysUp(unsigned char key, int x, int y){
 		keysPressed['a']=false;
 		//recomputeOrientation();
 	}
+	// if(glutGetModifiers()!=GLUT_ACTIVE_CTRL){
+	// 	CTRL_PRESSED = !(CTRL_PRESSED);
+	// }
 }
 void myTimer(int value) {
 
+	if(timerValue>=1.0){
+		timerValue =0;
+		WHICH_POINTS = !(WHICH_POINTS);
+	}
+	if(WHICH_POINTS){
+		onBez = evaluateBezierCurve(controlPoints.at(0), controlPoints.at(1), controlPoints.at(2), controlPoints.at(3), timerValue);
+		// glPushMatrix();{
+		// 	glTranslatef(characterX+sin(transportRotation*M_PI/180),characterY-2,characterZ+cos(transportRotation*M_PI/180));
+		// 	glRotatef(transportRotation, 0, 1, 0);
+		// 	glScalef(.25,.25,.25);
+		// 	drawSolidSphere(onBez.getX(),onBez.getY(),onBez.getZ());
+		// 	};glPopMatrix();
+	}
+	else{
+		onBez = evaluateBezierCurve(controlPoints.at(3), controlPoints.at(4), controlPoints.at(5), controlPoints.at(6), timerValue);
+		// glPushMatrix();{
+		// 	glTranslatef(characterX+sin(transportRotation*M_PI/180),characterY-2,characterZ+cos(transportRotation*M_PI/180));
+		// 	glRotatef(transportRotation, 0, 1, 0);
+		// 	glScalef(.25,.25,.25);
+		// 	drawSolidSphere(onBez.getX(),onBez.getY(),onBez.getZ());
+		// 	};glPopMatrix();
+	}
+	
 	if(keysPressed['s']){
 		if(characterX < 49 && characterX > -49 && characterZ < 49 && characterZ > -49){
 			characterZ -= cameraStepValue*sin(transportRotation*M_PI/180);
@@ -644,7 +943,7 @@ void myTimer(int value) {
 			// cameraX += cameraStepValue*cos(transportRotation*M_PI/180);
 			wheelRotation -= 7;
 		}
-		// {
+		// else{
 		// 	characterZ += cameraStepValue*sin(transportRotation);
 		// 	characterX -= cameraStepValue*cos(transportRotation);
 		// 	cameraZ += cameraStepValue*sin(transportRotation);
@@ -675,6 +974,7 @@ void myTimer(int value) {
 		cameraTheta -= 2*M_PI/180;
 	}
 
+	timerValue += .01;
 	fanRotate += 5;
 	glutPostRedisplay();
 	glutTimerFunc(1000/60, myTimer, 0);
@@ -688,12 +988,18 @@ void myTimer(int value) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
+
+	bool file_Good = loadControlPoints(argv[1]);
+    if(!file_Good){
+        cout << "Your file input was not good, please try again!" << endl;
+        exit(-1);
+    }
     // create a double-buffered GLUT window at (50,50) with predefined windowsize
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(50,50);
     glutInitWindowSize(windowWidth,windowHeight);
-    glutCreateWindow("flight simulator 0.31");
+    glutCreateWindow("Cyclopalypse Now Asssignment 4");
 
     // give the camera a scenic starting point.
     cameraX = 40;
@@ -715,6 +1021,9 @@ int main(int argc, char **argv) {
     glutMouseFunc(mouseCallback);
     glutMotionFunc(mouseMotion);
     glutTimerFunc(1000/60, myTimer, 0);
+
+    //create menus
+    createMenus();
     // do some basic OpenGL setup
     initScene();
 
