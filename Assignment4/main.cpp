@@ -16,7 +16,8 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glu.h>
 #else					// else compiling on Linux OS
-	#include <GL/freeglut.h>
+	//#include <GL/freeglut.h>
+	#include <gl/glut.h>
 	#include <GL/gl.h>
 	#include <GL/glu.h>
 #endif
@@ -182,6 +183,9 @@ void drawCity() {
 
 	}
 }
+
+///DRAWING HERO STARTS HERE///
+
 //draw cyclinder for character
 //void drawCylinder()
 void drawCylinder() {
