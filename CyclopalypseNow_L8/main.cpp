@@ -250,7 +250,7 @@ void renderScene(void) {
 
     // TODO #3: Apply our brick texture
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 1);
+	glBindTexture(GL_TEXTURE_2D, 0);
     glPushMatrix(); {
         glTranslatef(objX, objY, objZ);
         
