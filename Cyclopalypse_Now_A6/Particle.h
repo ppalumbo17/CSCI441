@@ -17,6 +17,8 @@
 
 		void draw();
 
+		void drawTexturedSprite(float spriteXWidth, float spriteYWidth);
+
 		void update();
 	};
 #endif

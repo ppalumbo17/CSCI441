@@ -19,25 +19,40 @@
 		position = p;
 	}
 	void Particle::draw(){
+
+		// Vector normal = Vector(0,0,1);
+	 //    // Vector dir = cameraXYZ-forestCenter;
+	 //    Vector dir = Vector(forestCenter.getX()-cameraXYZ.getX(), 0.0, forestCenter.getZ()-cameraXYZ.getZ());
+	 //    normal.normalize();
+	 //    dir.normalize();
+	 //    // Vector tar = forestCenter-normal;
+	 //    float rotation = acos(dot(dir,normal))*180/M_PI;
+	 //    Vector axis = cross(normal,dir);
+
+		int spriteSize = 20;
 		glPushMatrix();
 		glTranslatef(position.getX(), position.getY(), position.getZ());
-		glBegin(GL_QUADS);{
-			glNormal3f(0,0,1);
-			glTexCoord2f(0,0.01);
-			glVertex3f(0, 0, 0);
+		// glBegin(GL_QUADS);{
+		// 	glNormal3f(0,0,1);
+		// 	glTexCoord2f(0,0.01);
+		// 	glVertex3f(0, 0, 0);
 
-			glNormal3f(0,0,1);
-			glTexCoord2f(0,1);
-			glVertex3f(0, 1, 0);
+		// 	glNormal3f(0,0,1);
+		// 	glTexCoord2f(0,1);
+		// 	glVertex3f(0, spriteSize, 0);
 
-			glNormal3f(0,0,1);
-			glTexCoord2f(0, 1);
-			glVertex3f(1, 1, 0);
+		// 	glNormal3f(0,0,1);
+		// 	glTexCoord2f(0, 1);
+		// 	glVertex3f(spriteSize, spriteSize, 0);
 
-			glNormal3f(0,0,1);
-			glTexCoord2f(0,0.01);
-			glVertex3f(1, 0, 0);
-		}glEnd();
+		// 	glNormal3f(0,0,1);
+		// 	glTexCoord2f(0,0.01);
+		// 	glVertex3f(spriteSize, 0, 0);
+		// }glEnd();
+		// glRotatef(rotation, 0, axis.getY(), 0);
+		// glRotatef(rotation, 0, 1, 0);
+		drawTexturedSprite(spriteSize, spriteSize);
+		glPopMatrix();
 
 	}
 	void Particle::update(){
@@ -51,3 +66,23 @@
 		}
 		
 	}
+
+	void Particle::drawTexturedSprite( float spriteXWidth, float spriteYWidth ) {
+    glBegin( GL_QUADS ); {
+        glNormal3f( 0, 0, 1 );
+        glTexCoord2f( 0, 0.01 );
+        glVertex3f( -(spriteXWidth/2.0f), spriteYWidth, 0 );
+        
+        glNormal3f( 0, 0, 1 );
+        glTexCoord2f( 0, 1 );
+        glVertex3f( -(spriteXWidth/2.0f),         0.0f, 0 );
+        
+        glNormal3f( 0, 0, 1 );
+        glTexCoord2f( 1, 1 );
+        glVertex3f( (spriteXWidth/2.0f),         0.0f, 0 );
+        
+        glNormal3f( 0, 0, 1 );
+        glTexCoord2f( 1, 0.01 );
+        glVertex3f( (spriteXWidth/2.0f), spriteYWidth, 0 );
+    }; glEnd();
+}

@@ -13,7 +13,7 @@ To move the camera press the left mouse button and move the mouse.
 To zoom the camera hold control and the left mouse button and move the mouse up and down.
 
 Compiling:
-To compile type make or gmake. Then run the executable named assignment4.  If you have trouble compiling on windows see line 19 in main.cpp and change where it says include freeglut to include glut.
+To compile type make or gmake. Then run the executable named assignment4 with the argument of controlPoints7.csv.  If you have trouble compiling on windows see line 19 in main.cpp and change where it says include freeglut to include glut.
 
 Bugs:
 There is a bug where the car will stop moving when you get to the edge of the grid.  I've tried fixing this bug with a few different options but those fixes create other bugs.

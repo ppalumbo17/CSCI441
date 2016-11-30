@@ -11,7 +11,7 @@
 #include <vector>
 #include <stdlib.h>
 	ParticleSystem::ParticleSystem(){
-		this->type = FOUNTAIN:
+		//this->type = FOUNTAIN:
 		this->source = Point(0,0,0);
 		this->cone=minVelocity=maxVelocity=minLifespan=maxLifespan=spawn=0;
 	}
@@ -42,9 +42,9 @@
 		double degrees = rand() % 360;
 		double vel = minVelocity + (rand() %(int)(maxVelocity-minVelocity));
 		double angle = 90 - (rand() % (int)cone);
-		double vX = sin(degrees*PI/180);
-		double vY = sin(cone*PI/180)*vel;
-		double vZ = sin(degrees*PI/180)*vel;
+		double vX = sin(degrees*M_PI/180);
+		double vY = sin(cone*M_PI/180)*vel;
+		double vZ = sin(degrees*M_PI/180)*vel;
 
 		if(spawn/60 >= 1){
 			for(int i = 0; i < (spawn/60); i++){
@@ -62,7 +62,7 @@
 			particles.at(j)->update();
 		}
 
-		vector< Particle *> newParticles;
+		std::vector< Particle *> newParticles;
 		for(unsigned int k = 0; k < particles.size(); k++){
 			if(particles.at(k)->age > particles.at(k)->lifetime){
 				delete particles.at(k);
@@ -72,4 +72,16 @@
 			}
 		}
 		particles = newParticles;
+	}
+	double getMinV(){
+		return this->minVelocity;
+	}
+	double getMaxV(){
+		return this->maxVelocity;
+	}
+	double getMinL(){
+		return this->minLifespan;
+	}
+	double getMaxL(){
+		return this->maxLifespan;
 	}

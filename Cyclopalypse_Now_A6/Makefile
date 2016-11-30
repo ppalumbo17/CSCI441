@@ -22,16 +22,16 @@
 ########################################
 
 TARGET = assingment6
-OBJECTS = main.o MyPoint.o Particle.o ParticleSystem.o src/Point.o src/Vector.o src/PointBase.o src/Matrix.o venus/Object.o venus/Face.o venus/Material.o
+OBJECTS = main.o Particle.o ParticleSystem.o src/Point.o src/Vector.o src/PointBase.o src/Matrix.o venus/Object.o venus/Face.o venus/Material.o
 
-LOCAL_INC_PATH = /Users/jpaone/Desktop/include
-LOCAL_LIB_PATH = /Users/jpaone/Desktop/lib
-LOCAL_BIN_PATH = /Users/jpaone/Desktop/bin
+LOCAL_INC_PATH = /usr/include
+LOCAL_LIB_PATH = /usr/lib
+LOCAL_BIN_PATH = /usr/bin
 
-BUILDING_IN_LAB = 1
+BUILDING_IN_LAB = 0
 
 USING_GLEW = 1
-USING_GLUI = 1
+USING_GLUI = 0
 USING_OPENAL = 0
 USING_OPENGL = 1
 USING_SOIL = 1
@@ -52,7 +52,7 @@ USING_SOIL = 1
 ## COMPILING INFO
 #############################
 
-CXX    = C:/Strawberry/c/bin/g++.exe
+CXX    = g++
 CFLAGS = -Wall -g
 
 INCPATH += -I./include
@@ -164,7 +164,7 @@ ifeq ($(USING_GLEW), 1)
 	else
         INCPATH += -I$(LOCAL_INC_PATH)
         LIBPATH += -L$(LOCAL_LIB_PATH)
-		LIBS += -lglew
+		LIBS += -lGLEW
 		WINDOWS_GLEW = 0
     endif
 else
@@ -210,21 +210,21 @@ all: $(TARGET)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
-	if [ $(USING_OPENAL) -eq 1 ]; \
-	then \
-		if [ $(WINDOWS_AL) -eq 1 ]; \
-		then \
-			rm OpenAL32.dll; \
-			rm libalut.dll; \
-		fi \
-	fi 
-	if [ $(USING_GLEW) -eq 1 ]; \
-	then \
-		if [ $(WINDOWS_GLEW) -eq 1 ]; \
-		then \
-			rm cygGLEW-1-13.dll; \
-		fi \
-	fi  
+	# if [ $(USING_OPENAL) -eq 1 ]; \
+	# then \
+	# 	if [ $(WINDOWS_AL) -eq 1 ]; \
+	# 	then \
+	# 		rm OpenAL32.dll; \
+	# 		rm libalut.dll; \
+	# 	fi \
+	# fi 
+	# if [ $(USING_GLEW) -eq 1 ]; \
+	# then \
+	# 	if [ $(WINDOWS_GLEW) -eq 1 ]; \
+	# 	then \
+	# 		rm cygGLEW-1-13.dll; \
+	# 	fi \
+	# fi  
 
 depend:
 	rm -f Makefile.bak
@@ -248,3 +248,4 @@ $(TARGET): $(OBJECTS)
 
 # DEPENDENCIES
 main.o: main.cpp
+point.o: point.cpp

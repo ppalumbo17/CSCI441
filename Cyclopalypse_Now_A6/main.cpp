@@ -1,15 +1,14 @@
 /*
  *  CSCI 441, Computer Graphics, Fall 2016
  *
- *  Project: lab09
+ *  Project: Assignment 6
  *  File: main.cpp
  *
  *  Description:
- *      This lab will demonstrate how to use shaders by
- *  modifying a sphere.
+ *      This program will demonstrate the use of particle systems.
  *
  *  Author:
- *      Jeffrey Paone, Colorado School of Mines
+ *      Peter Palumbo, Colorado School of Mines
  *  
  *  Notes:
  *
@@ -26,6 +25,7 @@
     #include <GL/glut.h>
     #include <GL/gl.h>
     #include <GL/glu.h>
+    #include <GL/freeglut.h>
 #endif
 
 #include <GL/glui.h>
@@ -42,7 +42,6 @@
 
 #include "Particle.h"
 #include "ParticleSystem.h"
-#include "MyPoint.h"
 
 #include <math.h>
 #include <time.h>
@@ -107,7 +106,7 @@ float lineThickness = 3.0f;  //variable for line thickness between points
 
 vector<vector<double> > *particleSystemsFiles;
 vector<ParticleSystem *> particleSystems;
-vector<MyPoint> controlPoints;
+vector<Point> controlPoints;
 float trackPointVal = 0.0f;
 float timerValue = 0.0f; //timer value to control pixie
 
@@ -116,7 +115,7 @@ bool DRAW_CURVE = true;  //Menu option for drawing the bezier curve
 bool CTRL_PRESSED = false;
 bool WHICH_POINTS = true;
 
-MyPoint onBez;
+Point onBez;
 
 bool keysPressed[256];
 GLuint environmentDL;                       // display list for the 'city'
@@ -804,13 +803,13 @@ void recomputeOrientation() {
 // Computes a location along a Bezier Curve. 
 //
 ////////////////////////////////////////////////////////////////////////////////
-MyPoint evaluateBezierCurve( MyPoint p0, MyPoint p1, MyPoint p2, MyPoint p3, float t ) {
+Point evaluateBezierCurve( Point p0, Point p1, Point p2, Point p3, float t ) {
     // TODO #08: Compute a point along a Bezier curve
     float bezX = pow(1-t, 3)*p0.getX() + 3*pow(1-t, 2)*t*p1.getX() + 3*(1-t)*pow(t, 2)*p2.getX() + pow(t, 3)*p3.getX();
     float bezY = pow(1-t, 3)*p0.getY() + 3*pow(1-t, 2)*t*p1.getY() + 3*(1-t)*pow(t, 2)*p2.getY() + pow(t, 3)*p3.getY();
     float bezZ = pow(1-t, 3)*p0.getZ() + 3*pow(1-t, 2)*t*p1.getZ() + 3*(1-t)*pow(t, 2)*p2.getZ() + pow(t, 3)*p3.getZ();
 
-    return MyPoint(bezX, bezY, bezZ);
+    return Point(bezX, bezY, bezZ);
 }
 
 // renderBezierCurve() //////////////////////////////////////////////////////////
@@ -819,7 +818,7 @@ MyPoint evaluateBezierCurve( MyPoint p0, MyPoint p1, MyPoint p2, MyPoint p3, flo
 //  Breaks the curve into n segments as specified by the resolution. 
 //
 ////////////////////////////////////////////////////////////////////////////////
-void renderBezierCurve( MyPoint p0, MyPoint p1, MyPoint p2, MyPoint p3, int resolution ) {
+void renderBezierCurve( Point p0, Point p1, Point p2, Point p3, int resolution ) {
     // TODO #07: Draw a Bezier curve
     glPushMatrix();
     glLineWidth(lineThickness);
@@ -827,7 +826,7 @@ void renderBezierCurve( MyPoint p0, MyPoint p1, MyPoint p2, MyPoint p3, int reso
     glBegin(GL_LINE_STRIP);
     for(float i = 0; i < resolution; i+=.4){
         float time = float(i) / float(resolution);
-        MyPoint eval = evaluateBezierCurve(p0, p1, p2, p3, time);
+        Point eval = evaluateBezierCurve(p0, p1, p2, p3, time);
         glVertex3f(eval.getX(),eval.getY(),eval.getZ());
         //drawSolidSphere(eval.getX(),eval.getY(),eval.getZ());
     }
@@ -908,7 +907,7 @@ bool loadControlPoints( char* filename ) {
             }
             //cout << "Error is here" << endl;
             if(file.good()){
-                MyPoint new_Point(input_Points.at(0),input_Points.at(1),input_Points.at(2));
+                Point new_Point(input_Points.at(0),input_Points.at(1),input_Points.at(2));
                 controlPoints.push_back(new_Point);
             }
         }
@@ -924,7 +923,7 @@ bool loadParticleSystems(char* filename){
     }
     if(file.is_open()){
         while(file.good()){
-            // int type;
+            int type;
             // double x;
             // double y;
             // double z;
@@ -1235,6 +1234,7 @@ void renderScene(void)  {
     //all particle stuff
     for(unsigned int i = 0; i < particleSystems.size(); i ++){
         particleSystems.at(i)->draw();
+        printf("%d %d %d %d\n", particleSystems.at(i)->getMinV(), particleSystems.at(i)->getMaxV(), particleSystems.at(i)->getMinL(), particleSystems.at(i)->getMaxL() );
     }
     //push the back buffer to the screen
     glutSwapBuffers();
@@ -1535,7 +1535,7 @@ int main( int argc, char **argv ) {
     particleSystemFile = argv[5];
 
     //Test particle systems
-    particleSystems.push_back(new ParticleSystem(1, 2.0, 2.0, 2.0, 10.0, 2.0, 4.0, 10.0, 20.0, 2));
+    particleSystems.push_back(new ParticleSystem(1, 2.0, 2.0, 2.0, 10.0, 2.0, 4.0, 10.0, 20.0, 600));
 
     //register texture
     string brickFile = "./brick.ppm";
